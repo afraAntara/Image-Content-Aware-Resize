@@ -11,7 +11,7 @@ import numpy as np
 import time
 import multiprocessing
 from PIL import Image
-from serial_algo import algo1
+from serial_forward_algo import algo1
 
 
 class ImageGalleryViewer(QMainWindow):
@@ -61,17 +61,17 @@ class ImageGalleryViewer(QMainWindow):
         load_image_button.setContentsMargins(0, 0, 0, 0)
         load_image_button.clicked.connect(self.open_file)
 
-        # Layout for row input
-        row_input_layout = QVBoxLayout()
-        self.row_remove_input = QLineEdit(self)
-        self.row_remove_input.setPlaceholderText("Enter rows to remove")
-        row_input_layout.addWidget(self.row_remove_input)
-
         # Layout for column input
         col_input_layout = QVBoxLayout()
         self.col_remove_input = QLineEdit(self)
         self.col_remove_input.setPlaceholderText("Enter cols to remove")
         col_input_layout.addWidget(self.col_remove_input)
+
+        # Layout for row input
+        row_input_layout = QVBoxLayout()
+        self.row_remove_input = QLineEdit(self)
+        self.row_remove_input.setPlaceholderText("Enter rows to remove")
+        row_input_layout.addWidget(self.row_remove_input)
 
         # Add buttons to the main layout
         navigation_widget_layout.addWidget(description_label)
