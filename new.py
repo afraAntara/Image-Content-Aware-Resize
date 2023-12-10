@@ -96,23 +96,23 @@ def find_row_seam(energy_map):
     
     return row_path, row_insert_energy
 
-# Calculate the energy for inserting a column based on the given seam
-def calculate_column_energy(energy_map, column_path):
-    row_num, col_num = gray_image.shape
-    insert_energy = 0
-    for i in range(0, row_num):
-        j= column_path[i]
-        insert_energy += energy_map[i,j]
-    return insert_energy
+# # Calculate the energy for inserting a column based on the given seam
+# def calculate_column_energy(energy_map, column_path):
+#     row_num, col_num = gray_image.shape
+#     insert_energy = 0
+#     for i in range(0, row_num):
+#         j= column_path[i]
+#         insert_energy += energy_map[i,j]
+#     return insert_energy
 
-# Calculate the energy for inserting a column based on the given seam
-def calculate_row_energy(energy_map, row_path):
-    row_num, col_num = gray_image.shape
-    insert_energy = 0
-    for j in range(0, col_num):
-        i= row_path[j]
-        insert_energy += energy_map[i,j]
-    return insert_energy
+# # Calculate the energy for inserting a column based on the given seam
+# def calculate_row_energy(energy_map, row_path):
+#     row_num, col_num = gray_image.shape
+#     insert_energy = 0
+#     for j in range(0, col_num):
+#         i= row_path[j]
+#         insert_energy += energy_map[i,j]
+#     return insert_energy
 
 # Delete the column from the given gray scale image based on the seam by iterating through column path and removing that pixel which falls in column
 def remove_column(gray_image, column_path):
