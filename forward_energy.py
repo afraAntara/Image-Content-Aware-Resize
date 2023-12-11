@@ -102,24 +102,27 @@ def remove_seam(image, seam):
 #
 #     return visualized_image
 
-
+@jit
 def seam_carving(image, target_columns, target_rows):
     rows = 0
     cols = 0
     image = image.astype(np.float64)
+    print("Start size:", image.shape)
     # print("Seam")
-    while rows <= target_rows or cols <= target_columns:
+    while rows < target_rows or cols < target_columns:
         if (target_rows == 0):
             seam_vertical, col_energy = find_seam(image)
             image = remove_seam(image, seam_vertical)
+            # print(cols)
             cols += 1
 
         elif (target_columns == 0):
+            # print("why 1")
             image_rotate = rotate_image(image, True)
             seam_horizontal, row_energy = find_seam(image_rotate)
             image_rotate = remove_seam(image_rotate, seam_horizontal)
             image = rotate_image(image_rotate, False)
-            cols += 1
+            rows += 1
 
         else:
             # print("Seam2")
@@ -128,7 +131,7 @@ def seam_carving(image, target_columns, target_rows):
             seam_horizontal, row_energy = find_seam(image_rotate)
             # print(row_energy,col_energy)
             if col_energy < row_energy:
-                if cols <= target_columns:
+                if cols < target_columns:
                     image = remove_seam(image, seam_vertical)
                     cols += 1
                 else:
@@ -136,7 +139,7 @@ def seam_carving(image, target_columns, target_rows):
                     image = rotate_image(image_rotate, False)
                     rows += 1
             else:
-                if rows <= target_rows:
+                if rows < target_rows:
                     image_rotate = remove_seam(image_rotate, seam_horizontal)
                     image = rotate_image(image_rotate, False)
                     rows += 1
@@ -162,7 +165,7 @@ def algo1(qImage, row, col):
     start_time = time.time()
     #entering seam_carving
     output_image = seam_carving(input_image, target_columns, target_rows)
-
+    print(output_image.shape)
     end_time = time.time()
     print("Time of the normal way running in: ", (end_time - start_time))
 
