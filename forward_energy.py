@@ -11,7 +11,7 @@ from PyQt5.QtGui import QImage, QImageReader
 
 @jit
 def compute_energy(image):
-
+    # print("Seam4")
     rows, cols = image.shape[:2]
 
     I = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_BGR2GRAY).astype(float)
@@ -44,7 +44,9 @@ def compute_energy(image):
 
 @jit
 def find_seam(image):
+    # print("Seam3")
     energy = compute_energy(image)
+    # print("Seam5")
     rows, cols = energy.shape
     M = energy
     seam_energy=0
@@ -102,16 +104,17 @@ def remove_seam(image, seam):
 
 
 def seam_carving(image, target_columns, target_rows):
-    # visualized_image = image.copy()
     rows = 0
     cols = 0
+    image = image.astype(np.float64)
+    # print("Seam")
     while rows <= target_rows or cols <= target_columns:
         if (target_rows == 0):
             seam_vertical, col_energy = find_seam(image)
             image = remove_seam(image, seam_vertical)
             cols += 1
 
-        elif (target_cols == 0):
+        elif (target_columns == 0):
             image_rotate = rotate_image(image, True)
             seam_horizontal, row_energy = find_seam(image_rotate)
             image_rotate = remove_seam(image_rotate, seam_horizontal)
@@ -119,6 +122,7 @@ def seam_carving(image, target_columns, target_rows):
             cols += 1
 
         else:
+            # print("Seam2")
             seam_vertical, col_energy = find_seam(image)
             image_rotate = rotate_image(image, True)
             seam_horizontal, row_energy = find_seam(image_rotate)
@@ -131,9 +135,7 @@ def seam_carving(image, target_columns, target_rows):
                     image_rotate = remove_seam(image_rotate, seam_horizontal)
                     image = rotate_image(image_rotate, False)
                     rows += 1
-                    # print("null1")
             else:
-                # print("null2")
                 if rows <= target_rows:
                     image_rotate = remove_seam(image_rotate, seam_horizontal)
                     image = rotate_image(image_rotate, False)
@@ -158,7 +160,6 @@ def algo1(qImage, row, col):
     target_columns = col
     print("Starting")
     start_time = time.time()
-
     #entering seam_carving
     output_image = seam_carving(input_image, target_columns, target_rows)
 
