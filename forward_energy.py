@@ -5,11 +5,10 @@ import multiprocessing
 import argparse
 from numba import jit
 from PIL import Image
-# from numba import jit
 from PyQt5.QtGui import QImage, QImageReader
 
 
-# @jit
+@jit
 def compute_energy(image):
     # print("Seam4")
     rows, cols = image.shape[:2]
@@ -42,7 +41,7 @@ def compute_energy(image):
 
     return energy
 
-# @jit
+@jit
 def find_seam(image):
     # print("Seam3")
     energy = compute_energy(image)
@@ -79,7 +78,7 @@ def find_seam(image):
     seam_idx.reverse()
     return np.array(seam_idx), seam_energy
 
-
+@jit
 def remove_seam(image, seam):
     rows, cols, _ = image.shape
     # channels_to_keep = [1, 2, 3]
@@ -93,26 +92,19 @@ def remove_seam(image, seam):
 
 
 
-
-# def visualize_seam(image, seam, color=(0, 0, 255)):
-#     visualized_image = image.copy()
-#
-#     for i in range(len(seam)):
-#         visualized_image[i, seam[i]] = color
-#
-#     return visualized_image
-
-# @jit
+@jit
 def seam_carving(image, target_columns, target_rows):
     rows = 0
     cols = 0
     image = image.astype(np.float64)
     print("Start size:", image.shape)
     # print("Seam")
+    total_energy_removed = 0
     while rows < target_rows or cols < target_columns:
         if (target_rows == 0):
             seam_vertical, col_energy = find_seam(image)
             image = remove_seam(image, seam_vertical)
+            total_energy_removed +=col_energy
             # print(cols)
             cols += 1
 
@@ -122,6 +114,7 @@ def seam_carving(image, target_columns, target_rows):
             seam_horizontal, row_energy = find_seam(image_rotate)
             image_rotate = remove_seam(image_rotate, seam_horizontal)
             image = rotate_image(image_rotate, False)
+            total_energy_removed += row_energy
             rows += 1
 
         else:
@@ -133,27 +126,26 @@ def seam_carving(image, target_columns, target_rows):
             if col_energy < row_energy:
                 if cols < target_columns:
                     image = remove_seam(image, seam_vertical)
+                    total_energy_removed += col_energy
                     cols += 1
                 else:
                     image_rotate = remove_seam(image_rotate, seam_horizontal)
                     image = rotate_image(image_rotate, False)
+                    total_energy_removed += row_energy
                     rows += 1
             else:
                 if rows < target_rows:
                     image_rotate = remove_seam(image_rotate, seam_horizontal)
                     image = rotate_image(image_rotate, False)
+                    total_energy_removed += row_energy
                     rows += 1
                 else:
                     image = remove_seam(image, seam_vertical)
+                    total_energy_removed += col_energy
                     cols += 1
 
         print(image.shape)
-    return image
-
-
-
-    # return visualized_image,
-    # return output_image
+    return image, total_energy_removed
 
 
 def algo1(qImage, row, col):
@@ -164,27 +156,21 @@ def algo1(qImage, row, col):
     print("Starting")
     start_time = time.time()
     #entering seam_carving
-    output_image = seam_carving(input_image, target_columns, target_rows)
+    output_image, total_energy_removed = seam_carving(input_image, target_columns, target_rows)
     print(output_image.shape)
+    print(total_energy_removed)
     end_time = time.time()
     print("Time of the normal way running in: ", (end_time - start_time))
 
-    # Display the original image with highlighted seams
-    # cv2.imshow("Original Image with Seams", visualized_image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
 
-    # print("Time of the normal way running in: ", time_all)
     red_channel=output_image[:, :, 0]
     green_channel = output_image[:, :, 1]
     blue_channel = output_image[:, :, 2]
     color_channels = [red_channel, green_channel, blue_channel ]
-    # print(color_channels)
-    # print(color_channels.shape)
+
     color_image = np.array(color_channels)
     color_image = np.transpose(color_image, axes=(1, 2, 0))
     color_image = color_image.astype('uint8')
-    # Ensure the correct order of color channels
     color_image_rgb = cv2.cvtColor(color_image, cv2.COLOR_BGR2RGB)
 
     # Convert the NumPy array to a QImage
@@ -215,13 +201,3 @@ def qimage_to_numpy(qimage):
 def rotate_image(image, clockwise):
     k = 1 if clockwise else 3
     return np.rot90(image, k)
-
-# def visualize(im, boolmask=None, rotate=False):
-#     vis = im.astype(np.uint8)
-#     if boolmask is not None:
-#         vis[np.where(boolmask == False)] = SEAM_COLOR
-#     if rotate:
-#         vis = rotate_image(vis, False)
-#     cv2.imshow("visualization", vis)
-#     cv2.waitKey(1)
-#     return vis

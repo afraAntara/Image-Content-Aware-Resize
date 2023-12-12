@@ -40,6 +40,7 @@ def compute_energy(image):
     energy = np.sqrt(gradient_x ** 2 + gradient_y ** 2)
 
     return energy
+
 @jit
 def find_seam(image):
     energy = compute_energy(image)
@@ -76,7 +77,7 @@ def find_seam(image):
 
     return np.array(seam_idx), seam_energy
 
-
+@jit
 def remove_seam(image, seam):
     rows, cols, _ = image.shape
     # channels_to_keep = [1, 2, 3]
@@ -88,18 +89,7 @@ def remove_seam(image, seam):
         new_image[i, :, :] = np.delete(image[i, :, :], j, axis=0)
     return new_image
 
-
-
-
-# def visualize_seam(image, seam, color=(0, 0, 255)):
-#     visualized_image = image.copy()
-#
-#     for i in range(len(seam)):
-#         visualized_image[i, seam[i]] = color
-#
-#     return visualized_image
-
-
+@jit
 def seam_carving(image, target_columns, target_rows):
     # visualized_image = image.copy()
     rows = 0
