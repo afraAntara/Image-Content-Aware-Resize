@@ -10,8 +10,8 @@ import cv2
 import numpy as np
 import time
 import multiprocessing
-from PIL import Image
-from serial_forward_algo import algo1
+import warnings
+from forward_energy import algo1
 
 
 class ImageGalleryViewer(QMainWindow):
@@ -266,6 +266,7 @@ class ImageGalleryViewer(QMainWindow):
 
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore")
     app = QApplication(sys.argv)
     gallery_viewer = ImageGalleryViewer()
     gallery_viewer.show()
