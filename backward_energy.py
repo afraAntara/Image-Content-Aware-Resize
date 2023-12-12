@@ -104,7 +104,8 @@ def seam_carving(image, target_columns, target_rows):
     # visualized_image = image.copy()
     rows = 0
     cols = 0
-    while rows <= target_rows or cols <= target_columns:
+    print("Starting Energy")
+    while rows < target_rows or cols < target_columns:
 
         if  (target_rows == 0):
             seam_vertical, col_energy = find_seam(image)
@@ -116,7 +117,7 @@ def seam_carving(image, target_columns, target_rows):
             seam_horizontal, row_energy = find_seam(image_rotate)
             image_rotate = remove_seam(image_rotate, seam_horizontal)
             image = rotate_image(image_rotate, False)
-            cols += 1
+            rows += 1
         
         else:
             seam_vertical, col_energy = find_seam(image)

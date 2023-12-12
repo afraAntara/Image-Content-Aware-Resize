@@ -5,11 +5,11 @@ import multiprocessing
 import argparse
 from numba import jit
 from PIL import Image
-# from numba import jit
+from numba import jit
 from PyQt5.QtGui import QImage, QImageReader
 
 
-# @jit
+@jit
 def compute_energy(image):
     # print("Seam4")
     rows, cols = image.shape[:2]
@@ -42,7 +42,7 @@ def compute_energy(image):
 
     return energy
 
-# @jit
+@jit
 def find_seam(image):
     # print("Seam3")
     energy = compute_energy(image)
@@ -77,9 +77,9 @@ def find_seam(image):
         seam_energy += energy[i, j]
         j = backtrack[i, j]
     seam_idx.reverse()
-    return np.array(seam_idx), seam_energy
+    return np.array(seam_idx)
 
-
+@jit
 def remove_seam(image, seam):
     rows, cols, _ = image.shape
     # channels_to_keep = [1, 2, 3]
@@ -88,6 +88,9 @@ def remove_seam(image, seam):
     # print(new_image.shape)
     for i in range(rows):
         j = seam[i]
+        # print(i,j)
+        # print(image.shape)
+        # print(new_image.shape)
         new_image[i, :, :] = np.delete(image[i, :, :], j, axis=0)
     return new_image
 
@@ -102,53 +105,118 @@ def remove_seam(image, seam):
 #
 #     return visualized_image
 
-# @jit
+# def recursive_remove(image, target_rows, target_columns):
+#     if target_rows==0 and target_columns==0:
+#         return image
+#
+#     seam_vertical, col_energy = find_seam(image)
+#     image_rotate = rotate_image(image, True)
+#     seam_horizontal, row_energy = find_seam(image_rotate)
+
+@jit
+def add_seam(image, seam):
+    # print("Here adding")
+    rows, cols = image.shape[:2]
+    output = np.zeros((rows, cols + 1, 4))
+    for i in range(rows):
+        j = seam[i]
+        for ch in range(3):
+            if j == 0:
+                # print("Adding at j=0")
+                new_pixel = np.average(image[i, j: j + 2, ch])
+                # print("pass")
+                output[i, j, ch] = image[i, j, ch]
+                # print("pass")
+                output[i, j + 1, ch] = new_pixel
+                # print("pass")
+                output[i, j + 1:, ch] = image[i, j:, ch]
+            else:
+                # print("Adding at else")
+                new_pixel = np.average(image[i, j - 1: j + 1, ch])
+                # print("pass")
+                output[i, : j, ch] = image[i, : j, ch]
+                # print("pass")
+                output[i, j, ch] = new_pixel
+                # print("pass")
+                output[i, j + 1:, ch] = image[i, j:, ch]
+    # print("adding done")
+    return output
+
+
+def enlarge(image, target):
+
+    seam_list = []
+    temp = image.copy()
+    for i in range(target):
+        seam = find_seam(temp)
+        seam_list.append(seam)
+        temp = remove_seam(temp,seam)
+    # print("Seams found")
+    seam_list.reverse()
+    # print(seam_list)
+    for i in range(target):
+        seam = seam_list.pop()
+        # print("Here to add")
+        image = add_seam(image, seam)
+        # update the remaining seam indices
+        for remaining_seam in seam_list:
+            remaining_seam[np.where(remaining_seam >= seam)] += 2
+        print(image.shape)
+    return image
+
 def seam_carving(image, target_columns, target_rows):
     rows = 0
     cols = 0
     image = image.astype(np.float64)
-    print("Start size:", image.shape)
-    # print("Seam")
-    while rows < target_rows or cols < target_columns:
-        if (target_rows == 0):
-            seam_vertical, col_energy = find_seam(image)
-            image = remove_seam(image, seam_vertical)
-            # print(cols)
-            cols += 1
+    print("Starting image size: ", image.shape)
+    output = enlarge(image, target_columns)
+    print(output.shape)
+    print("cols removed")
+    rotated_image = rotate_image(output, True)
+    print(rotated_image.shape)
+    print("enlarge rows")
+    output = enlarge(rotated_image, target_rows)
+    output = rotate_image(output, False)
+    print("Output image size: ", output.shape)
+    return output
 
-        elif (target_columns == 0):
-            # print("why 1")
-            image_rotate = rotate_image(image, True)
-            seam_horizontal, row_energy = find_seam(image_rotate)
-            image_rotate = remove_seam(image_rotate, seam_horizontal)
-            image = rotate_image(image_rotate, False)
-            rows += 1
+#
+# while rows < target_rows or cols < target_columns:
+#     if (target_rows == 0):
+#         seam_vertical_record, col_energy = find_seam(image)
+#         image = add_seam(image, seam_vertical)
+#         cols += 1
+#
+#     elif (target_columns == 0):
+#         image_rotate = rotate_image(image, True)
+#         seam_horizontal, row_energy = find_seam(image_rotate)
+#         image_rotate = add_seam(image_rotate, seam_horizontal)
+#         image = rotate_image(image_rotate, False)
+#         rows += 1
+#
+#     else:
+#         # print("Seam2")
+#         seam_vertical, col_energy = find_seam(image)
+#         image_rotate = rotate_image(image, True)
+#         seam_horizontal, row_energy = find_seam(image_rotate)
+#         # print(row_energy,col_energy)
+#         if col_energy < row_energy:
+#             if cols < target_columns:
+#                 image = add_seam(image, seam_vertical)
+#                 cols += 1
+#             else:
+#                 image_rotate = add_seam(image_rotate, seam_horizontal)
+#                 image = rotate_image(image_rotate, False)
+#                 rows += 1
+#         else:
+#             if rows < target_rows:
+#                 image_rotate = add_seam(image_rotate, seam_horizontal)
+#                 image = rotate_image(image_rotate, False)
+#                 rows += 1
+#             else:
+#                 image = add_seam(image, seam_vertical)
+#                 cols += 1
 
-        else:
-            # print("Seam2")
-            seam_vertical, col_energy = find_seam(image)
-            image_rotate = rotate_image(image, True)
-            seam_horizontal, row_energy = find_seam(image_rotate)
-            # print(row_energy,col_energy)
-            if col_energy < row_energy:
-                if cols < target_columns:
-                    image = remove_seam(image, seam_vertical)
-                    cols += 1
-                else:
-                    image_rotate = remove_seam(image_rotate, seam_horizontal)
-                    image = rotate_image(image_rotate, False)
-                    rows += 1
-            else:
-                if rows < target_rows:
-                    image_rotate = remove_seam(image_rotate, seam_horizontal)
-                    image = rotate_image(image_rotate, False)
-                    rows += 1
-                else:
-                    image = remove_seam(image, seam_vertical)
-                    cols += 1
-
-        print(image.shape)
-    return image
 
 
 
@@ -165,7 +233,7 @@ def algo1(qImage, row, col):
     start_time = time.time()
     #entering seam_carving
     output_image = seam_carving(input_image, target_columns, target_rows)
-    print(output_image.shape)
+
     end_time = time.time()
     print("Time of the normal way running in: ", (end_time - start_time))
 
