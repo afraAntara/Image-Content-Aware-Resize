@@ -131,6 +131,7 @@ def seam_carving(image, target_columns, target_rows, calculate_energy):
         if (target_rows == 0):
             seam_vertical, col_energy = find_seam(image, calculate_energy)
             image = remove_seam(image, seam_vertical)
+            greedy_seams.append("column")
             initial_min_energy +=col_energy
             cols += 1
 
@@ -139,6 +140,7 @@ def seam_carving(image, target_columns, target_rows, calculate_energy):
             seam_horizontal, row_energy = find_seam(image_rotate, calculate_energy)
             image_rotate = remove_seam(image_rotate, seam_horizontal)
             image = rotate_image(image_rotate, False)
+            greedy_seams.append("row")
             initial_min_energy += row_energy
             rows += 1
 
