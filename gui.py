@@ -145,7 +145,7 @@ class ImageGalleryViewer(QMainWindow):
         selected_operation = self.operation_combo.currentText()
 
         if selected_operation == "Enlarge":
-            resized_image = enlarge_algo(original_image, self.row_remove, self.col_remove)
+            resized_image = enlarge_algo(original_image, self.row_remove, self.col_remove, is_forward_energy_flag)
         else:
             resized_image = algo1(original_image, self.row_remove, self.col_remove, is_forward_energy_flag)
 
