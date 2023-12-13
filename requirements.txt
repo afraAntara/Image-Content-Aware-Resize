@@ -1,0 +1,4 @@
+PyQt5 Install: pip install PyQt5
+cv2 (OpenCV) Install: pip install opencv-python
+numpy Install: pip install numpy
+numba Install: pip install numba
