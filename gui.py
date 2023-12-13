@@ -2,16 +2,12 @@
 import sys
 import os
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QLabel, QScrollArea, QPushButton, \
-    QFileDialog, QHBoxLayout, QSizePolicy, QLineEdit
-
+    QFileDialog, QHBoxLayout, QSizePolicy, QLineEdit, QComboBox
 from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtCore import Qt
-import cv2
-import numpy as np
-import time
-import multiprocessing
 import warnings
-from forward_energy import algo1
+from image_resize import algo1
+from enlarge_image import enlarge_algo
 
 
 class ImageGalleryViewer(QMainWindow):
@@ -28,25 +24,19 @@ class ImageGalleryViewer(QMainWindow):
 
         self.layout = QVBoxLayout(self.central_widget)
 
-        # image are for input and output
+        # Image areas for input and output
         self.image_area_in_out_layout = QHBoxLayout()
 
         input_image_layout = QVBoxLayout()
-        input_label = QLabel("Input Image")
         self.input_image_container = QLabel()
         self.input_image_label = QLabel()
-        # self.input_image_label.setFixedSize(700,700)
-        self.input_image_label.setStyleSheet("background-color: #dddddd;")
-        input_image_layout.addWidget(input_label)
+        self.input_image_label.setStyleSheet("border: 2px solid #aaa; background-color: #f0f0f0;")
         input_image_layout.addWidget(self.input_image_label)
 
         output_image_layout = QVBoxLayout()
-        output_label = QLabel("Output Image")
         self.output_image_container = QLabel()
         self.output_image_label = QLabel()
-        # output_image_container.setFixedSize(700, 700)
-        self.output_image_container.setStyleSheet("background-color: #dddddd;")
-        output_image_layout.addWidget(output_label)
+        self.output_image_label.setStyleSheet("border: 2px solid #aaa; background-color: #f0f0f0;")
         output_image_layout.addWidget(self.output_image_label)
 
         self.image_area_in_out_layout.addLayout(input_image_layout)
@@ -54,33 +44,41 @@ class ImageGalleryViewer(QMainWindow):
 
         # Navigation and action
         navigation_widget_layout = QHBoxLayout()
-        navigation_widget_layout.setContentsMargins(0, 0, 0, 0)
-        description_label = QLabel("Choose image or ")
-        description_label.setContentsMargins(0, 0, 0, 0)
-        load_image_button = QPushButton("Load new Image", self)
-        load_image_button.setContentsMargins(0, 0, 0, 0)
+
+        load_image_button = QPushButton("Load New Image", self)
+        load_image_button.setStyleSheet("background-color: #4CAF50; color: white; border: none; padding: 10px; text-align: center; text-decoration: none; display: inline-block; font-size: 14px; margin: 4px 2px; cursor: pointer;")
         load_image_button.clicked.connect(self.open_file)
 
-        # Layout for column input
         col_input_layout = QVBoxLayout()
         self.col_remove_input = QLineEdit(self)
         self.col_remove_input.setPlaceholderText("Enter cols to remove")
         col_input_layout.addWidget(self.col_remove_input)
 
-        # Layout for row input
         row_input_layout = QVBoxLayout()
         self.row_remove_input = QLineEdit(self)
         self.row_remove_input.setPlaceholderText("Enter rows to remove")
         row_input_layout.addWidget(self.row_remove_input)
 
-        # Add buttons to the main layout
-        navigation_widget_layout.addWidget(description_label)
+        algorithm_label = QLabel("Choose Algorithm")
+        self.algorithm_combo = QComboBox(self)
+        self.algorithm_combo.addItem("Forward")
+        self.algorithm_combo.addItem("Backward")
+        self.algorithm_combo.setStyleSheet("QComboBox {background-color: #f0f0f0; font-size: 14px; border: 1px solid #aaa; padding: 3px;}")
+
+        self.operation_combo = QComboBox(self)
+        self.operation_combo.addItem("Reduce")
+        self.operation_combo.addItem("Enlarge")
+        self.operation_combo.setStyleSheet("QComboBox {background-color: #f0f0f0; font-size: 14px; border: 1px solid #aaa; padding: 3px;}")
+
         navigation_widget_layout.addWidget(load_image_button)
         navigation_widget_layout.addLayout(row_input_layout)
         navigation_widget_layout.addLayout(col_input_layout)
+        navigation_widget_layout.addWidget(algorithm_label)
+        navigation_widget_layout.addWidget(self.algorithm_combo)
+        navigation_widget_layout.addWidget(self.operation_combo)
 
         action_1_button = QPushButton("Resize", self)
-        action_1_button.setContentsMargins(0, 0, 0, 0)
+        action_1_button.setStyleSheet("background-color: #008CBA; color: white; border: none; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer;")
         action_1_button.clicked.connect(self.action1)
 
         navigation_widget_layout.addWidget(action_1_button)
@@ -102,39 +100,6 @@ class ImageGalleryViewer(QMainWindow):
         self.layout.addWidget(self.scroll_area)
 
 
-        # navigation and action
-        # navigation_widget_layout = QHBoxLayout()
-        # navigation_widget_layout.setContentsMargins(0, 0, 0, 0)
-        # description_label = QLabel("choose image or ")
-        # description_label.setContentsMargins(0, 0, 0, 0)
-        # load_image_button = QPushButton("Load new Image", self)
-        # load_image_button.setContentsMargins(0, 0, 0, 0)
-        # load_image_button.clicked.connect(self.open_file)
-        # action_1_button = QPushButton("resize", self)
-        # action_1_button.setContentsMargins(0, 0, 0, 0)
-        # action_1_button.clicked.connect(self.action1)
-        #
-        # navigation_widget_layout.addWidget(description_label)
-        # navigation_widget_layout.addWidget(load_image_button)
-        # navigation_widget_layout.addWidget(action_1_button)
-        #
-        # self.scroll_area = QScrollArea(self)
-        # self.scroll_area.setWidgetResizable(True)
-        # self.scroll_area.setFixedHeight(120)
-        # # self.scroll_area.setSpacing(0)
-        # self.scroll_area.setContentsMargins(0, 0, 0, 0)
-        # self.scroll_content = QWidget(self)
-        # self.scroll_layout = QHBoxLayout(self.scroll_content)
-        #
-        # self.scroll_area.setWidget(self.scroll_content)
-        # self.layout.addWidget(self.scroll_area)
-        #
-        # self.image_labels = []
-        #
-        # self.layout.addLayout(self.image_area_in_out_layout)
-        # self.layout.addLayout(navigation_widget_layout)
-        # self.layout.addWidget(self.scroll_area)
-
     def open_file(self):
         file_dialog = QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(self, "Open Image File", "",
@@ -148,6 +113,15 @@ class ImageGalleryViewer(QMainWindow):
             self.display_image(self.current_image_path)
             self.input_image_label.pixmap().save(self.current_image_path)
             self.load_images_to_scroll()
+
+    def algorithm_changed(self, index):
+        selected_algorithm = self.algorithm_combo.currentText()
+        print(f"Selected Algorithm: {selected_algorithm}")
+
+    def operation_changed(self, index):
+        selected_operation = self.operation_combo.currentText()
+        print(f"Selected Operation: {selected_operation}")
+
 
     def action1(self):
 
@@ -165,12 +139,15 @@ class ImageGalleryViewer(QMainWindow):
         if cols_input.isdigit():
             self.col_remove = int(cols_input)
 
-        # Call your algorithm to get the resized image
-        print("Here")
-        resized_image = algo1(original_image, self.row_remove, self.col_remove)
+        selected_algorithm = self.algorithm_combo.currentText()
+        is_forward_energy_flag = True if selected_algorithm == "Forward" else False
 
-        # # Call your algorithm to get the resized image
-        # resized_image = algo1(original_image)
+        selected_operation = self.operation_combo.currentText()
+
+        if selected_operation == "Enlarge":
+            resized_image = enlarge_algo(original_image, self.row_remove, self.col_remove)
+        else:
+            resized_image = algo1(original_image, self.row_remove, self.col_remove, is_forward_energy_flag)
 
         # Convert the QImage to a QPixmap for display
         resized_pixmap = QPixmap.fromImage(resized_image)
@@ -187,17 +164,6 @@ class ImageGalleryViewer(QMainWindow):
     def display_image(self, file_path, output=False):
             pixmap = QPixmap(file_path)
 
-            # # Calculate the new dimensions based on the zoom level
-            # width_image = pixmap.width()
-            # height_image = pixmap.height()
-            # # zoom_level = 700 / width_image
-            #
-            # new_width = int(width_image)
-            # new_height = int(height_image)
-            #
-            # # Scale the image to the new dimensions
-            # scaled_pixmap = pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-
             if output == False:
                 # Display the input image in the input QLabel
                 self.input_image_label.setPixmap(pixmap)
@@ -213,28 +179,6 @@ class ImageGalleryViewer(QMainWindow):
                 self.output_image_label.setMaximumSize(700, 700)
                 self.output_image_label.setMinimumSize(0, 0)
                 self.output_image_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-
-        # pixmap = QPixmap(file_path)
-        # # pixmap.scaled(700,700, aspectRatioMode=0)
-        # width_image = pixmap.width()
-        # height_image = pixmap.height()
-        # if width_image > height_image:
-        #     zoom_level = 700 / width_image
-        # else:
-        #     zoom_level = 700 / height_image
-        # # Calculate the new dimensions based on the zoom level
-        # new_width = int(width_image * zoom_level)
-        # new_height = int(height_image * zoom_level)
-        #
-        # # Scale the image to the new dimensions
-        # scaled_pixmap = pixmap.scaled(new_width, new_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        #
-        # self.input_image_label.setPixmap(scaled_pixmap)
-        # # self.input_image_label.setPixmap(pixmap)
-        # self.input_image_label.setAlignment(Qt.AlignCenter)
-        # self.input_image_label.setMaximumSize(700, 700)
-        # self.input_image_label.setMinimumSize(0, 0)
-        # self.input_image_label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
 
     def load_images_to_scroll(self):
         directory = os.getcwd() + "\\Input"
