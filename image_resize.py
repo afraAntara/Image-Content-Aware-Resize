@@ -5,6 +5,7 @@ from numba import jit
 from PyQt5.QtGui import QImage, QImageReader
 from energy_calculation import forward_energy
 from energy_calculation import backward_energy
+from forward_energy_parallel import compute_energy
 
 @jit
 def find_seam(image, calculate_energy):
@@ -103,8 +104,15 @@ def seam_carving(image, target_columns, target_rows, calculate_energy):
     return image, total_energy_removed
 
 
-def algo1(qImage, row, col, is_forward_energy):
-    calculate_energy = forward_energy if is_forward_energy else backward_energy
+def algo1(qImage, row, col, selected_algo):
+
+    if selected_algo == "Forward":
+        calculate_energy = forward_energy
+    elif selected_algo == "Backward":
+        calculate_energy = backward_energy
+    else:
+        calculate_energy = compute_energy
+
     input_image = qimage_to_numpy(qImage)
     target_rows = row
     target_columns = col

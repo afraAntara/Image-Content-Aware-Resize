@@ -3,10 +3,10 @@ import numpy as np
 import time
 import random
 from numba import jit
-from PyQt5.QtGui import QImage, QImageReader
+from PyQt5.QtGui import QImage
 from energy_calculation import forward_energy
 from energy_calculation import backward_energy
-
+from forward_energy_parallel import compute_energy
 
 @jit
 def find_seam(image, calculate_energy):
@@ -190,9 +190,15 @@ def seam_carving(image, target_columns, target_rows, calculate_energy):
 
     return initial_image
 
-def random_hill(qImage, row, col, is_forward_energy ):
+def random_hill(qImage, row, col, selected_algo):
 
-    calculate_energy = forward_energy if is_forward_energy else backward_energy
+    if selected_algo == "Forward":
+        calculate_energy = forward_energy
+    elif selected_algo == "Backward":
+        calculate_energy = backward_energy
+    else:
+        calculate_energy = compute_energy
+
     input_image = qimage_to_numpy(qImage)
     target_rows = row
     target_columns = col

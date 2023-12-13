@@ -63,12 +63,13 @@ class ImageGalleryViewer(QMainWindow):
         self.algorithm_combo = QComboBox(self)
         self.algorithm_combo.addItem("Forward")
         self.algorithm_combo.addItem("Backward")
+        self.algorithm_combo.addItem("Parallel Forward")
         self.algorithm_combo.setStyleSheet("QComboBox {background-color: #f0f0f0; font-size: 14px; border: 1px solid #aaa; padding: 3px;}")
 
         self.operation_combo = QComboBox(self)
         self.operation_combo.addItem("Reduce")
         self.operation_combo.addItem("Enlarge")
-        self.operation_combo.addItem("Random hill")
+        self.operation_combo.addItem("Random hill reduce")
         self.operation_combo.setStyleSheet("QComboBox {background-color: #f0f0f0; font-size: 14px; border: 1px solid #aaa; padding: 3px;}")
 
         navigation_widget_layout.addWidget(load_image_button)
@@ -141,16 +142,15 @@ class ImageGalleryViewer(QMainWindow):
             self.col_remove = int(cols_input)
 
         selected_algorithm = self.algorithm_combo.currentText()
-        is_forward_energy_flag = True if selected_algorithm == "Forward" else False
 
         selected_operation = self.operation_combo.currentText()
 
         if selected_operation == "Enlarge":
-            resized_image = enlarge_algo(original_image, self.row_remove, self.col_remove, is_forward_energy_flag)
+            resized_image = enlarge_algo(original_image, self.row_remove, self.col_remove, selected_algorithm)
         elif selected_operation == "Reduce":
-            resized_image = algo1(original_image, self.row_remove, self.col_remove, is_forward_energy_flag)
+            resized_image = algo1(original_image, self.row_remove, self.col_remove, selected_algorithm)
         else:
-            resized_image = random_hill(original_image, self.row_remove, self.col_remove, is_forward_energy_flag)
+            resized_image = random_hill(original_image, self.row_remove, self.col_remove, selected_algorithm)
 
         # Convert the QImage to a QPixmap for display
         resized_pixmap = QPixmap.fromImage(resized_image)
