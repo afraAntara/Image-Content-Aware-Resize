@@ -8,7 +8,7 @@ from PyQt5.QtCore import Qt
 import warnings
 from image_resize import algo1
 from enlarge_image import enlarge_algo
-
+from hill_climbing import random_hill
 
 class ImageGalleryViewer(QMainWindow):
     def __init__(self):
@@ -68,6 +68,7 @@ class ImageGalleryViewer(QMainWindow):
         self.operation_combo = QComboBox(self)
         self.operation_combo.addItem("Reduce")
         self.operation_combo.addItem("Enlarge")
+        self.operation_combo.addItem("Random hill")
         self.operation_combo.setStyleSheet("QComboBox {background-color: #f0f0f0; font-size: 14px; border: 1px solid #aaa; padding: 3px;}")
 
         navigation_widget_layout.addWidget(load_image_button)
@@ -146,8 +147,10 @@ class ImageGalleryViewer(QMainWindow):
 
         if selected_operation == "Enlarge":
             resized_image = enlarge_algo(original_image, self.row_remove, self.col_remove, is_forward_energy_flag)
-        else:
+        elif selected_operation == "Reduce":
             resized_image = algo1(original_image, self.row_remove, self.col_remove, is_forward_energy_flag)
+        else:
+            resized_image = random_hill(original_image, self.row_remove, self.col_remove, is_forward_energy_flag)
 
         # Convert the QImage to a QPixmap for display
         resized_pixmap = QPixmap.fromImage(resized_image)
